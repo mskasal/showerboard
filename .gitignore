@@ -1,0 +1,17 @@
+config.py
+firmware/config.py
+config.json
+firmware/config.json
+config.tmp
+firmware/config.tmp
+state.json
+firmware/state.json
+log.txt
+log.old
+__pycache__/
+*.pyc
+.venv/
+.firmware/
+out/
+preview/
+.DS_Store

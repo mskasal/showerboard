@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Showerboard Setup</title>
+<style>
+*{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+body{margin:0;background:#f4f5f7;color:#111;padding:12px 12px 48px}
+.wrap{max-width:480px;margin:0 auto}
+header{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:6px 2px 10px;flex-wrap:wrap}
+h1{font-size:20px;margin:0;letter-spacing:-.3px}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 2px 12px;flex-wrap:wrap}
+.pills{display:flex;gap:6px;flex-wrap:wrap}
+.pill{font-size:12px;padding:4px 10px;border-radius:99px;background:#e5e7eb;color:#374151;font-weight:600}
+.pill.ok{background:#dcfce7;color:#166534}
+.pill.err{background:#fee2e2;color:#991b1b}
+.lang-sw{display:inline-flex;background:#e5e7eb;border-radius:99px;padding:2px;gap:2px}
+.lang-sw button{padding:4px 9px;border-radius:99px;font-size:12px;background:transparent;color:#374151}
+.lang-sw button.on{background:#111;color:#fff}
+.card{background:#fff;border-radius:14px;padding:16px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+h2{font-size:15px;margin:0 0 12px;display:flex;align-items:center;justify-content:space-between}
+label{display:block;font-size:13px;color:#4b5563;margin:10px 0 4px;font-weight:500}
+input[type=text],input[type=password],input[type=number],input[type=time],select{
+  width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:10px;font-size:15px;background:#fff;color:#111
+}
+.row{display:flex;gap:8px;align-items:center}
+.row>*{flex:1}
+.row .fit{flex:0 0 auto}
+button{
+  border:0;border-radius:10px;padding:10px 14px;font-size:14px;font-weight:600;cursor:pointer;
+  background:#111;color:#fff
+}
+button.sec{background:#e5e7eb;color:#111}
+button.danger{background:#fee2e2;color:#991b1b}
+button.full{width:100%;padding:13px;font-size:15px}
+button:disabled{opacity:.45;cursor:not-allowed}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.chip{
+  padding:7px 11px;border-radius:99px;font-size:13px;font-weight:600;
+  border:1px solid #d1d5db;background:#fff;color:#374151;cursor:pointer;user-select:none
+}
+.chip.on{background:#111;color:#fff;border-color:#111}
+.stops{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.stop{border:1.5px solid #e5e7eb;border-radius:11px;padding:10px 12px;cursor:pointer;background:#fafafa}
+.stop.sel{border-color:#111;background:#f3f4f6}
+.stop-top{display:flex;justify-content:space-between;gap:8px;font-weight:600;font-size:14px}
+.stop-sub{font-size:12px;color:#4b5563;margin-top:4px;display:flex;justify-content:space-between;align-items:center}
+.tags{display:flex;gap:4px;flex-wrap:wrap}
+.tag{font-size:11px;padding:2px 6px;border-radius:6px;background:#e5e7eb;color:#111;font-weight:600}
+.tag.s{background:#dcfce7;color:#166534}
+.tag.u{background:#dbeafe;color:#1e40af}
+.tag.b{background:#f3e8ff;color:#6b21a8}
+.tag.t{background:#fee2e2;color:#991b1b}
+.msg{font-size:13px;margin-top:8px;padding:8px 10px;border-radius:8px;display:none}
+.msg.ok{display:block;background:#dcfce7;color:#166534}
+.msg.err{display:block;background:#fee2e2;color:#991b1b}
+.msg.info{display:block;background:#e0f2fe;color:#075985}
+.switch{display:flex;align-items:center;justify-content:space-between;margin:4px 0 8px}
+.switch input{width:20px;height:20px;accent-color:#111}
+.muted{font-size:12px;color:#6b7280;margin-top:4px}
+.hide{display:none}
+.foot{display:flex;gap:8px;margin-top:10px}
+.foot button{flex:1}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Showerboard</h1>
+    <div class="lang-sw" id="langSw" role="group" aria-label="Language">
+      <button type="button" data-l="en">EN</button>
+      <button type="button" data-l="de">DE</button>
+      <button type="button" data-l="tr">TR</button>
+    </div>
+  </header>
+  <div class="bar">
+    <div class="pills">
+      <span id="wbadge" class="pill">Wi-Fi offline</span>
+      <span id="bbadge" class="pill hide"></span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span data-i="s1">1. Wi-Fi (2.4 GHz)</span> <button type="button" class="sec fit" id="btnScan" data-i="scan" style="padding:6px 10px;font-size:12px">Scan</button></h2>
+    <label for="netSel" data-i="netSel">Select network</label>
+    <select id="netSel"></select>
+    <div id="customSsidWrap" class="hide">
+      <label for="ssidCustom" data-i="ssidCustom">Network name (SSID)</label>
+      <input id="ssidCustom" type="text" maxlength="32">
+    </div>
+    <label for="wpass" data-i="pass">Password</label>
+    <input id="wpass" type="password" maxlength="63">
+    <div style="margin-top:10px">
+      <button type="button" id="btnWifi" class="full" data-i="btnWifi">Connect &amp; Test Wi-Fi</button>
+    </div>
+    <div id="wifiMsg" class="msg"></div>
+  </div>
+
+  <div class="card">
+    <h2 data-i="s2">2. Address &amp; Transit (Berlin)</h2>
+    <label for="addr" data-i="addr">Home address</label>
+    <div class="row">
+      <input id="addr" type="text" maxlength="80">
+      <button type="button" id="btnAddr" class="fit" data-i="find">Find</button>
+    </div>
+    <div id="addrMsg" class="msg"></div>
+    <div id="addrChoices" class="chips"></div>
+
+    <label data-i="modes">Transport modes</label>
+    <div class="chips" id="prodChips">
+      <span class="chip on" data-k="suburban">S-Bahn</span>
+      <span class="chip" data-k="subway">U-Bahn</span>
+      <span class="chip" data-k="bus" data-i="bus">Bus</span>
+      <span class="chip" data-k="tram" data-i="tram">Tram</span>
+    </div>
+
+    <div id="selectedBox" class="msg info"></div>
+    <div id="stopsList" class="stops"></div>
+
+    <div class="row" style="margin-top:10px">
+      <div>
+        <label for="walkMin" data-i="walk">Walk (min)</label>
+        <input id="walkMin" type="number" min="0" max="60" placeholder="8">
+      </div>
+      <div>
+        <label for="prepMin" data-i="prep">Prep (min)</label>
+        <input id="prepMin" type="number" min="0" max="60" value="5">
+      </div>
+    </div>
+
+    <label for="dirs" data-i="dirs">Direction filter (optional, comma-separated)</label>
+    <input id="dirs" type="text">
+
+    <label for="dlines" data-i="dlines">Priority / direct lines (optional)</label>
+    <input id="dlines" type="text">
+  </div>
+
+  <div class="card">
+    <h2 data-i="s3">3. Sleep Schedule</h2>
+    <div class="switch">
+      <span style="font-size:14px;font-weight:500" data-i="sleepOn">Sleep mode enabled (saves battery)</span>
+      <input id="sleepOn" type="checkbox" checked>
+    </div>
+    <div id="sleepOffHint" class="muted hide" data-i="sleepOff">Sleep disabled: device stays active 24/7.</div>
+    <div id="sleepFields">
+      <div class="row">
+        <div>
+          <label for="sleepStart" data-i="sleepStart">Sleep start</label>
+          <input id="sleepStart" type="time" value="10:00">
+        </div>
+        <div>
+          <label for="sleepEnd" data-i="sleepEnd">Wake time</label>
+          <input id="sleepEnd" type="time" value="06:00">
+        </div>
+      </div>
+      <div class="muted" data-i="sleepHint">Overnight wrap supported (e.g. 23:00–06:30 or 10:00–06:00).</div>
+      <label data-i="days">Active days (inactive days stay asleep)</label>
+      <div class="chips" id="dayChips">
+        <span class="chip on" data-d="0"></span>
+        <span class="chip on" data-d="1"></span>
+        <span class="chip on" data-d="2"></span>
+        <span class="chip on" data-d="3"></span>
+        <span class="chip on" data-d="4"></span>
+        <span class="chip on" data-d="5"></span>
+        <span class="chip on" data-d="6"></span>
+      </div>
+      <label for="wakeMin" data-i="wakeMin">Manual button wake duration (min)</label>
+      <input id="wakeMin" type="number" min="5" max="240" value="30">
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 data-i="s4">4. Display</h2>
+    <div class="row">
+      <div>
+        <label for="rot" data-i="rot">Orientation</label>
+        <select id="rot">
+          <option value="0" data-i="rot0">Normal (0°)</option>
+          <option value="180" data-i="rot180">Flipped (180°)</option>
+        </select>
+      </div>
+      <div>
+        <label for="epdVer" data-i="panel">Panel</label>
+        <select id="epdVer">
+          <option value="V4B" data-i="epdV4B">2.13-B V4 (Tri-color)</option>
+          <option value="V4" data-i="epdV4">2.13 V4 (B/W)</option>
+          <option value="V3" data-i="epdV3">2.13 V3 (B/W)</option>
+        </select>
+      </div>
+    </div>
+    <label for="refMin" data-i="refMin">Refresh interval</label>
+    <select id="refMin">
+      <option value="1" data-i="ref1">1 min (every minute)</option>
+      <option value="2" data-i="ref2">2 min</option>
+      <option value="3" selected data-i="ref3">3 min (recommended — 180 s)</option>
+      <option value="5" data-i="ref5">5 min (max battery)</option>
+    </select>
+    <div class="muted" data-i="refHint">At least 3 min (180 s) is recommended for tri-color e-Paper longevity.</div>
+  </div>
+
+  <div id="saveMsg" class="msg"></div>
+  <button type="button" id="btnSave" class="full" data-i="save">Save &amp; Start</button>
+  <div class="foot">
+    <button type="button" id="btnCancel" class="sec" data-i="cancel">Close</button>
+    <button type="button" id="btnReset" class="danger" data-i="reset">Factory Reset</button>
+  </div>
+</div>
+
+<script>
+const I18N = {
+  en: {
+    title:"Showerboard Setup", s1:"1. Wi-Fi (2.4 GHz)", scan:"Scan", netSel:"Select network",
+    ssidCustom:"Network name (SSID)", ssidPh:"2.4 GHz Wi-Fi name", pass:"Password",
+    passPh:"Wi-Fi password", passSaved:"Saved password (leave blank to keep)",
+    btnWifi:"Connect & Test Wi-Fi", s2:"2. Address & Transit (Berlin)", addr:"Home address",
+    addrPh:"e.g. Alexanderplatz 1, Berlin", find:"Find", modes:"Transport modes",
+    bus:"Bus", tram:"Tram", walk:"Walk (min)", prep:"Prep (min)",
+    dirs:"Direction filter (optional, comma-separated)", dirsPh:"Empty = both directions (e.g. Westkreuz, Potsdam)",
+    dlines:"Priority / direct lines (optional)", dlinesPh:"Empty = all lines equal (e.g. S5, S7)",
+    s3:"3. Sleep Schedule", sleepOn:"Sleep mode enabled (saves battery)",
+    sleepOff:"Sleep disabled: device stays active 24/7.", sleepStart:"Sleep start", wakeEnd:"Wake time",
+    sleepEnd:"Wake time", sleepHint:"Overnight wrap supported (e.g. 23:00–06:30 or 10:00–06:00).",
+    days:"Active days (inactive days stay asleep)", dayNames:["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],
+    wakeMin:"Manual button wake duration (min)", s4:"4. Display", rot:"Orientation",
+    rot0:"Normal (0°)", rot180:"Flipped (180°)", panel:"Panel",
+    epdV4B:"2.13-B V4 (Tri-color)", epdV4:"2.13 V4 (B/W)", epdV3:"2.13 V3 (B/W)",
+    refMin:"Refresh interval", ref1:"1 min (every minute)", ref2:"2 min",
+    ref3:"3 min (recommended — 180 s)", ref5:"5 min (max battery)",
+    refHint:"At least 3 min (180 s) is recommended for tri-color e-Paper longevity.",
+    save:"Save & Start", cancel:"Close", reset:"Factory Reset",
+    wifiOff:"Wi-Fi offline", wifiOk:"Wi-Fi OK", openNet:" open", manualSsid:"Enter SSID manually...",
+    selStop:"Selected stop: ", minU:"min", errPref:"Error",
+    scanning:"Scanning networks...", scanFail:"Scan failed", needSsid:"Enter Wi-Fi SSID",
+    connecting:"Connecting...", connected:"Connected ({ip}). You can search your address now.",
+    connFail:"Connection failed", connTimeout:"Timed out. Check password and 2.4 GHz.",
+    searchingStops:"Searching nearby stops...", lanFallback:"Switching to home Wi-Fi to save RAM. Scan the new QR on screen.",
+    stopsFail:"Could not load stops", stopsFound:"{n} nearby stops found. Pick one:", noStops:"No stops found nearby",
+    needAddr:"Enter an address", needWifiFirst:"Connect to Wi-Fi above first", searchingAddr:"Searching address...",
+    addrNotFound:"Address not found — try street + number + Berlin",
+    noWifiSel:"No Wi-Fi selected", noStopSel:"No stop selected", badWalk:"Walk time must be 0–60 min",
+    noMode:"Select at least one transport mode", saving:"Saving...",
+    saved:"Saved! Restarting Showerboard...", sent:"Settings sent, restarting device.",
+    closing:"Closing setup...", confirmReset:"Erase all settings and reset device?", resetting:"Resetting..."
+  },
+  de: {
+    title:"Showerboard Einrichtung", s1:"1. WLAN (2,4 GHz)", scan:"Scannen", netSel:"Netzwerk wählen",
+    ssidCustom:"Netzwerkname (SSID)", ssidPh:"2,4-GHz-WLAN-Name", pass:"Passwort",
+    passPh:"WLAN-Passwort", passSaved:"Gespeichert (leer lassen zum Behalten)",
+    btnWifi:"WLAN verbinden & testen", s2:"2. Adresse & ÖPNV (Berlin)", addr:"Wohnadresse",
+    addrPh:"z.B. Alexanderplatz 1, Berlin", find:"Suchen", modes:"Verkehrsmittel",
+    bus:"Bus", tram:"Tram", walk:"Fußweg (Min)", prep:"Fertigmachen (Min)",
+    dirs:"Richtungsfilter (optional, Komma-getrennt)", dirsPh:"Leer = beide Richtungen (z.B. Westkreuz, Potsdam)",
+    dlines:"Direktlinien (optional)", dlinesPh:"Leer = alle gleich (z.B. S5, S7)",
+    s3:"3. Ruhemodus", sleepOn:"Ruhemodus aktiv (spart Akku)",
+    sleepOff:"Ruhemodus aus: Gerät bleibt 24/7 aktiv.", sleepStart:"Ruhe ab",
+    sleepEnd:"Aufwachen", sleepHint:"Über Mitternacht möglich (z.B. 23:00–06:30 oder 10:00–06:00).",
+    days:"Aktive Tage (inaktive Tage bleiben im Ruhemodus)", dayNames:["Mo","Di","Mi","Do","Fr","Sa","So"],
+    wakeMin:"Manuelle Weckdauer per Taste (Min)", s4:"4. Display", rot:"Ausrichtung",
+    rot0:"Normal (0°)", rot180:"Gedreht (180°)", panel:"Panel",
+    epdV4B:"2.13-B V4 (Dreifarbig)", epdV4:"2.13 V4 (S/W)", epdV3:"2.13 V3 (S/W)",
+    refMin:"Aktualisierung", ref1:"1 Min (jede Minute)", ref2:"2 Min",
+    ref3:"3 Min (empfohlen — 180 s)", ref5:"5 Min (max. Akku)",
+    refHint:"Für dreifarbige e-Paper-Panels werden mind. 3 Min (180 s) empfohlen.",
+    save:"Speichern & Starten", cancel:"Schließen", reset:"Zurücksetzen",
+    wifiOff:"WLAN getrennt", wifiOk:"WLAN OK", openNet:" offen", manualSsid:"SSID manuell eingeben...",
+    selStop:"Gewählte Haltestelle: ", minU:"Min", errPref:"Fehler",
+    scanning:"Suche Netzwerke...", scanFail:"Suche fehlgeschlagen", needSsid:"WLAN-Name eingeben",
+    connecting:"Verbinde...", connected:"Verbunden ({ip}). Jetzt Adresse suchen.",
+    connFail:"Verbindung fehlgeschlagen", connTimeout:"Zeitüberschreitung. Passwort & 2,4 GHz prüfen.",
+    searchingStops:"Suche Haltestellen...", lanFallback:"Wechsle ins Heim-WLAN (RAM). Neuen QR auf dem Display scannen.",
+    stopsFail:"Haltestellen nicht geladen", stopsFound:"{n} Haltestellen gefunden. Wähle eine:", noStops:"Keine Haltestellen in der Nähe",
+    needAddr:"Adresse eingeben", needWifiFirst:"Zuerst oben mit WLAN verbinden", searchingAddr:"Suche Adresse...",
+    addrNotFound:"Adresse nicht gefunden — Straße + Nr. + Berlin versuchen",
+    noWifiSel:"Kein WLAN gewählt", noStopSel:"Keine Haltestelle gewählt", badWalk:"Fußweg muss 0–60 Min sein",
+    noMode:"Mindestens ein Verkehrsmittel wählen", saving:"Speichere...",
+    saved:"Gespeichert! Showerboard startet neu...", sent:"Gesendet, Gerät startet neu.",
+    closing:"Setup wird geschlossen...", confirmReset:"Alle Einstellungen löschen und zurücksetzen?", resetting:"Wird zurückgesetzt..."
+  },
+  tr: {
+    title:"Showerboard Ayarlar", s1:"1. Wi-Fi (2.4 GHz)", scan:"Tara", netSel:"Ağ seç",
+    ssidCustom:"Ağ adı (SSID)", ssidPh:"2.4 GHz Wi-Fi adı", pass:"Şifre",
+    passPh:"Wi-Fi şifresi", passSaved:"Kayıtlı şifre var (değiştirmek için yaz)",
+    btnWifi:"Wi-Fi Bağlan ve Test Et", s2:"2. Adres ve Ulaşım (Berlin)", addr:"Ev adresin",
+    addrPh:"ör. Alexanderplatz 1, Berlin", find:"Bul", modes:"Ulaşım türü (gösterilecek hatlar)",
+    bus:"Otobüs", tram:"Tramvay", walk:"Yürüme (dk)", prep:"Hazırlık (dk)",
+    dirs:"Yön filtresi (opsiyonel, virgülle)", dirsPh:"Boş = her iki yön (ör. Westkreuz, Potsdam)",
+    dlines:"Öncelikli / direkt hatlar (opsiyonel)", dlinesPh:"Boş = tüm hatlar eşit (ör. S5, S7)",
+    s3:"3. Uyku Modu", sleepOn:"Uyku modu açık (pil tasarrufu)",
+    sleepOff:"Uyku kapalı: cihaz 7/24 aktif kalır.", sleepStart:"Uyku başlangıcı",
+    sleepEnd:"Uyanış saati", sleepHint:"Gece yarısını geçen saatler desteklenir (ör. 23:00–06:30 veya 10:00–06:00).",
+    days:"Aktif günler (kapalı günler hep uyur)", dayNames:["Pzt","Sal","Çar","Per","Cum","Cmt","Paz"],
+    wakeMin:"Elle uyandırma süresi (dk)", s4:"4. Ekran", rot:"Yön",
+    rot0:"Normal (0°)", rot180:"Ters (180°)", panel:"Panel",
+    epdV4B:"2.13-B V4 (Kırmızılı)", epdV4:"2.13 V4 (Siyah-Beyaz)", epdV3:"2.13 V3 (Siyah-Beyaz)",
+    refMin:"Güncelleme sıklığı", ref1:"1 dk (her dakika)", ref2:"2 dk",
+    ref3:"3 dk (önerilen — 180 sn)", ref5:"5 dk (maks. pil)",
+    refHint:"3 renkli e-Paper panel ömrü için önerilen en az 3 dk (180 sn).",
+    save:"Kaydet ve Başlat", cancel:"Kapat", reset:"Sıfırla",
+    wifiOff:"Wi-Fi bağlı değil", wifiOk:"Wi-Fi OK", openNet:" açık", manualSsid:"Elle ağ adı gir...",
+    selStop:"Seçili durak: ", minU:"dk", errPref:"Hata",
+    scanning:"Ağlar taranıyor...", scanFail:"Tarama başarısız", needSsid:"Ağ adı gir",
+    connecting:"Bağlanıyor...", connected:"Bağlandı ({ip}). Artık adres arayabilirsin.",
+    connFail:"Bağlanamadı", connTimeout:"Zaman aşımı. Şifreyi ve 2.4 GHz olduğunu kontrol et.",
+    searchingStops:"Yakındaki duraklar aranıyor...", lanFallback:"Bellek tasarrufu için cihaz ev Wi-Fi'ına geçiyor. Ekrandaki yeni QR'ı okut.",
+    stopsFail:"Duraklar alınamadı", stopsFound:"{n} yakın durak bulundu. Birini seç:", noStops:"Yakında durak bulunamadı",
+    needAddr:"Adres yaz", needWifiFirst:"Önce yukarıdan Wi-Fi'a bağlan", searchingAddr:"Adres aranıyor...",
+    addrNotFound:"Adres bulunamadı, cadde + numara + Berlin dene",
+    noWifiSel:"Wi-Fi ağı seçilmedi", noStopSel:"Durak seçilmedi", badWalk:"Yürüme süresi 0–60 dk olmalı",
+    noMode:"En az bir ulaşım türü seç", saving:"Kaydediliyor...",
+    saved:"Kaydedildi! Showerboard yeniden başlıyor...", sent:"Ayarlar gönderildi, cihaz yeniden başlıyor.",
+    closing:"Kurulum kapatılıyor...", confirmReset:"Tüm ayarlar silinip cihaz sıfırlansın mı?", resetting:"Sıfırlanıyor..."
+  }
+};
+
+const $ = id => document.getElementById(id);
+function detectLang(){
+  const nav = (navigator.language || "en").slice(0,2).toLowerCase();
+  return I18N[nav] ? nav : "en";
+}
+let S = {
+  lang: detectLang(),
+  cfg: {},
+  sta: false,
+  staIp: null,
+  networks: [],
+  stops: [],
+  selStopId: "",
+  selStopName: "",
+  lat: 52.5200,
+  lon: 13.4050,
+  products: {suburban:true,subway:false,bus:false,tram:false,ferry:false,express:false,regional:false},
+  days: [0,1,2,3,4,5,6]
+};
+
+function T(k){ return (I18N[S.lang] && I18N[S.lang][k]) || I18N.en[k] || k; }
+
+function applyLang(lang){
+  S.lang = I18N[lang] ? lang : "en";
+  document.documentElement.lang = S.lang;
+  document.title = T("title");
+  document.querySelectorAll("#langSw button").forEach(b => b.classList.toggle("on", b.dataset.l === S.lang));
+  document.querySelectorAll("[data-i]").forEach(el => { el.textContent = T(el.dataset.i); });
+  $("ssidCustom").placeholder = T("ssidPh");
+  $("wpass").placeholder = S.cfg.HAS_WIFI_PASSWORD ? T("passSaved") : T("passPh");
+  $("addr").placeholder = T("addrPh");
+  $("dirs").placeholder = T("dirsPh");
+  $("dlines").placeholder = T("dlinesPh");
+  const dn = T("dayNames");
+  document.querySelectorAll("#dayChips .chip").forEach(c => { c.textContent = dn[Number(c.dataset.d)]; });
+  setSta(S.sta, S.staIp);
+  fillNetworks(S.networks, currentSsid() || S.cfg.WIFI_SSID || "");
+  updateSelectedBanner();
+  renderStops();
+}
+
+document.querySelectorAll("#langSw button").forEach(b => {
+  b.onclick = () => applyLang(b.dataset.l);
+});
+
+function showMsg(id, cls, txt){
+  const el = $(id);
+  el.className = "msg" + (cls ? " " + cls : "");
+  el.textContent = txt || "";
+  el.style.display = txt ? "block" : "none";
+}
+
+function setSta(ok, ip){
+  S.sta = !!ok;
+  S.staIp = ok ? (ip || null) : null;
+  const b = $("wbadge");
+  b.className = "pill " + (ok ? "ok" : "");
+  b.textContent = ok ? (T("wifiOk") + (ip ? " · " + ip : "")) : T("wifiOff");
+}
+
+function setBatt(batt){
+  const b = $("bbadge");
+  if (!batt){ b.className = "pill hide"; return; }
+  b.className = "pill";
+  if (batt.usb){
+    b.textContent = "USB" + (batt.v ? " · " + Number(batt.v).toFixed(2) + "V" : "");
+  } else if (batt.pct !== null && batt.pct !== undefined){
+    b.textContent = Number(batt.pct) + "%" + (batt.v ? " · " + Number(batt.v).toFixed(2) + "V" : "");
+  } else {
+    b.className = "pill hide";
+  }
+}
+
+function fillNetworks(list, curSsid){
+  S.networks = list || [];
+  const sel = $("netSel");
+  sel.innerHTML = "";
+  let found = false;
+  S.networks.forEach(n => {
+    const o = document.createElement("option");
+    o.value = n.ssid;
+    o.textContent = n.ssid + " (" + Number(n.rssi) + " dBm)" + (n.open ? T("openNet") : "");
+    if (n.ssid === curSsid){ o.selected = true; found = true; }
+    sel.appendChild(o);
+  });
+  const man = document.createElement("option");
+  man.value = "__custom__";
+  man.textContent = T("manualSsid");
+  sel.appendChild(man);
+  if (curSsid && !found){
+    sel.value = "__custom__";
+    $("ssidCustom").value = curSsid;
+  }
+  $("customSsidWrap").className = sel.value === "__custom__" ? "" : "hide";
+}
+
+$("netSel").onchange = () => {
+  $("customSsidWrap").className = $("netSel").value === "__custom__" ? "" : "hide";
+};
+
+function currentSsid(){
+  return $("netSel").value === "__custom__" ? $("ssidCustom").value.trim() : $("netSel").value;
+}
+
+function syncProductChips(){
+  document.querySelectorAll("#prodChips .chip").forEach(c => {
+    c.classList.toggle("on", !!S.products[c.dataset.k]);
+  });
+}
+
+function syncDayChips(){
+  document.querySelectorAll("#dayChips .chip").forEach(c => {
+    c.classList.toggle("on", S.days.indexOf(Number(c.dataset.d)) >= 0);
+  });
+}
+
+function syncSleepUi(){
+  const on = $("sleepOn").checked;
+  $("sleepFields").className = on ? "" : "hide";
+  $("sleepOffHint").className = on ? "muted hide" : "muted";
+}
+
+$("sleepOn").onchange = syncSleepUi;
+
+document.querySelectorAll("#prodChips .chip").forEach(c => {
+  c.onclick = () => {
+    S.products[c.dataset.k] = !S.products[c.dataset.k];
+    syncProductChips();
+    renderStops();
+  };
+});
+
+document.querySelectorAll("#dayChips .chip").forEach(c => {
+  c.onclick = () => {
+    const d = Number(c.dataset.d);
+    const i = S.days.indexOf(d);
+    if (i >= 0) S.days.splice(i, 1); else S.days.push(d);
+    S.days.sort();
+    syncDayChips();
+  };
+});
+
+function updateSelectedBanner(){
+  if (S.selStopId){
+    showMsg("selectedBox", "info", T("selStop") + (S.selStopName || S.selStopId));
+  } else {
+    showMsg("selectedBox", "", "");
+  }
+}
+
+function esc(s){
+  return String(s).replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+}
+
+function renderStops(){
+  const box = $("stopsList");
+  box.innerHTML = "";
+  if (!S.stops.length) return;
+  const activeKinds = ["suburban","subway","bus","tram"].filter(k => S.products[k]);
+  const list = S.stops.filter(st => {
+    if (!activeKinds.length) return true;
+    return activeKinds.some(k => st.products && st.products[k]);
+  });
+  const shown = list.length ? list : S.stops;
+  shown.forEach(st => {
+    const div = document.createElement("div");
+    div.className = "stop" + (st.id === S.selStopId ? " sel" : "");
+    const tags = [];
+    if (st.products.suburban) tags.push('<span class="tag s">S-Bahn</span>');
+    if (st.products.subway) tags.push('<span class="tag u">U-Bahn</span>');
+    if (st.products.bus) tags.push('<span class="tag b">' + esc(T("bus")) + '</span>');
+    if (st.products.tram) tags.push('<span class="tag t">' + esc(T("tram")) + '</span>');
+    const wm = Number(st.walk_min) || 0;
+    const dist = Number(st.distance) || 0;
+    div.innerHTML =
+      '<div class="stop-top"><span>' + esc(st.name) + '</span><span>~' + wm + ' ' + esc(T("minU")) + '</span></div>' +
+      '<div class="stop-sub"><div class="tags">' + tags.join("") + '</div><span>' + dist + ' m</span></div>';
+    div.onclick = () => {
+      S.selStopId = st.id;
+      S.selStopName = st.name;
+      $("walkMin").value = wm;
+      const anyMatch = activeKinds.some(k => st.products[k]);
+      if (!anyMatch){
+        ["suburban","subway","bus","tram"].forEach(k => S.products[k] = !!st.products[k]);
+        syncProductChips();
+      }
+      updateSelectedBanner();
+      renderStops();
+    };
+    box.appendChild(div);
+  });
+}
+
+async function api(path, opts, timeoutMs){
+  const o = Object.assign({}, opts || {});
+  o.headers = Object.assign({"X-Requested-With": "showerboard"}, o.headers || {});
+  let timer = null;
+  if (timeoutMs && typeof AbortController !== "undefined"){
+    const ac = new AbortController();
+    o.signal = ac.signal;
+    timer = setTimeout(() => ac.abort(), timeoutMs);
+  }
+  try{
+    const r = await fetch(path, o);
+    const data = await r.json();
+    if (!r.ok && !data.error) data.error = T("errPref") + " (" + r.status + ")";
+    return data;
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
+async function loadState(){
+  applyLang(S.lang);
+  try{
+    const d = await api("/api/state");
+    const c = d.config || {};
+    S.cfg = c;
+    setSta(d.sta_connected, d.sta_ip);
+    setBatt(d.battery);
+    S.networks = d.networks || [];
+    $("addr").value = c.ADDRESS || "";
+    S.selStopId = c.STOP_ID || "";
+    S.selStopName = c.STOP_NAME || c.STOP_NAME_HINT || "";
+    S.lat = c.LAT || 52.5200;
+    S.lon = c.LON || 13.4050;
+    if (c.PRODUCTS) Object.assign(S.products, c.PRODUCTS);
+    syncProductChips();
+    if (c.YURUME_DK !== null && c.YURUME_DK !== undefined) $("walkMin").value = c.YURUME_DK;
+    $("prepMin").value = c.HAZIRLIK_DK ?? 5;
+    $("dirs").value = (c.DIRECTIONS || []).join(", ");
+    $("dlines").value = (c.DIRECT_LINES || []).join(", ");
+    $("sleepOn").checked = c.SLEEP_ENABLED !== false;
+    $("sleepStart").value = c.SLEEP_START || "10:00";
+    $("sleepEnd").value = c.SLEEP_END || "06:00";
+    S.days = Array.isArray(c.ACTIVE_DAYS) ? c.ACTIVE_DAYS.slice() : [0,1,2,3,4,5,6];
+    syncDayChips();
+    syncSleepUi();
+    $("wakeMin").value = c.MANUAL_WAKE_MIN ?? 30;
+    $("rot").value = String(c.ROTATION || 0);
+    $("epdVer").value = c.EPD_VERSION || "V4B";
+    $("refMin").value = String(c.REFRESH_MIN ?? 3);
+    const savedLang = c.STOP_ID && c.LANG && I18N[c.LANG] ? c.LANG : detectLang();
+    applyLang(savedLang);
+  }catch(e){
+    showMsg("saveMsg", "err", T("errPref") + ": " + e.message);
+  }
+}
+
+$("btnScan").onclick = async () => {
+  $("btnScan").disabled = true;
+  showMsg("wifiMsg", "info", T("scanning"));
+  try{
+    const d = await api("/api/scan");
+    fillNetworks(d.networks || [], currentSsid());
+    showMsg("wifiMsg", "", "");
+  }catch(e){
+    showMsg("wifiMsg", "err", T("scanFail"));
+  }
+  $("btnScan").disabled = false;
+};
+
+$("btnWifi").onclick = async () => {
+  const ssid = currentSsid();
+  if (!ssid){ showMsg("wifiMsg", "err", T("needSsid")); return; }
+  $("btnWifi").disabled = true;
+  showMsg("wifiMsg", "info", T("connecting"));
+  try{
+    const d = await api("/api/wifi", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ssid, password: $("wpass").value})
+    }, 6000);
+    if (d.ok && !d.connecting){
+      setSta(true, d.ip);
+      showMsg("wifiMsg", "ok", T("connected").replace("{ip}", d.ip));
+      $("btnWifi").disabled = false;
+      return;
+    }
+    if (!d.ok && !d.connecting){
+      setSta(false);
+      showMsg("wifiMsg", "err", d.error || T("connFail"));
+      $("btnWifi").disabled = false;
+      return;
+    }
+  }catch(e){}
+  const deadline = Date.now() + 22000;
+  let done = false;
+  while (Date.now() < deadline){
+    await new Promise(r => setTimeout(r, 1500));
+    try{
+      const st = await api("/api/state", null, 3500);
+      if (st.sta_connected){
+        setSta(true, st.sta_ip);
+        showMsg("wifiMsg", "ok", T("connected").replace("{ip}", st.sta_ip));
+        done = true;
+        break;
+      }
+      if (st.sta_error){
+        setSta(false);
+        showMsg("wifiMsg", "err", st.sta_error);
+        done = true;
+        break;
+      }
+    }catch(e){}
+  }
+  if (!done){
+    setSta(false);
+    showMsg("wifiMsg", "err", T("connTimeout"));
+  }
+  $("btnWifi").disabled = false;
+};
+
+async function fetchNearby(lat, lon){
+  S.lat = lat; S.lon = lon;
+  showMsg("addrMsg", "info", T("searchingStops"));
+  const d = await api("/api/nearby?lat=" + encodeURIComponent(lat) + "&lon=" + encodeURIComponent(lon));
+  if (d.lan_fallback){
+    showMsg("addrMsg", "info", T("lanFallback"));
+    return;
+  }
+  if (!d.ok){
+    showMsg("addrMsg", "err", d.error || T("stopsFail"));
+    return;
+  }
+  S.stops = d.stops || [];
+  showMsg("addrMsg", S.stops.length ? "ok" : "err",
+    S.stops.length ? T("stopsFound").replace("{n}", S.stops.length) : T("noStops"));
+  renderStops();
+}
+
+$("btnAddr").onclick = async () => {
+  const q = $("addr").value.trim();
+  if (!q){ showMsg("addrMsg", "err", T("needAddr")); return; }
+  if (!S.sta){
+    try{
+      const st = await api("/api/state", null, 3500);
+      setSta(st.sta_connected, st.sta_ip);
+    }catch(e){}
+  }
+  if (!S.sta){ showMsg("addrMsg", "err", T("needWifiFirst")); return; }
+  $("btnAddr").disabled = true;
+  $("addrChoices").innerHTML = "";
+  showMsg("addrMsg", "info", T("searchingAddr"));
+  try{
+    const d = await api("/api/address?q=" + encodeURIComponent(q));
+    if (d.lan_fallback){
+      showMsg("addrMsg", "info", T("lanFallback"));
+      return;
+    }
+    if (!d.ok){
+      showMsg("addrMsg", "err", d.error || T("addrNotFound"));
+    }else if (!d.results || !d.results.length){
+      showMsg("addrMsg", "err", T("addrNotFound"));
+    }else{
+      d.results.forEach((a, idx) => {
+        const sp = document.createElement("span");
+        sp.className = "chip" + (idx === 0 ? " on" : "");
+        sp.textContent = a.address;
+        sp.onclick = () => {
+          document.querySelectorAll("#addrChoices .chip").forEach(x => x.classList.remove("on"));
+          sp.classList.add("on");
+          $("addr").value = a.address;
+          fetchNearby(a.lat, a.lon);
+        };
+        $("addrChoices").appendChild(sp);
+      });
+      $("addr").value = d.results[0].address;
+      await fetchNearby(d.results[0].lat, d.results[0].lon);
+    }
+  }catch(e){
+    showMsg("addrMsg", "err", T("errPref") + ": " + e.message);
+  }
+  $("btnAddr").disabled = false;
+};
+
+function parseCsv(s){
+  return s.split(",").map(x => x.trim()).filter(Boolean);
+}
+
+$("btnSave").onclick = async () => {
+  const ssid = currentSsid();
+  if (!ssid){ showMsg("saveMsg", "err", T("noWifiSel")); return; }
+  if (!S.selStopId){ showMsg("saveMsg", "err", T("noStopSel")); return; }
+  const walk = Number($("walkMin").value);
+  if (isNaN(walk) || walk < 0 || walk > 60){ showMsg("saveMsg", "err", T("badWalk")); return; }
+  if (!Object.values(S.products).some(Boolean)){ showMsg("saveMsg", "err", T("noMode")); return; }
+
+  $("btnSave").disabled = true;
+  showMsg("saveMsg", "info", T("saving"));
+  const payload = {
+    LANG: S.lang,
+    WIFI_SSID: ssid,
+    WIFI_PASSWORD: $("wpass").value,
+    ADDRESS: $("addr").value.trim(),
+    STOP_ID: S.selStopId,
+    STOP_NAME: S.selStopName,
+    STOP_NAME_HINT: S.selStopName,
+    PRODUCTS: S.products,
+    YURUME_DK: Math.round(walk),
+    HAZIRLIK_DK: Math.max(0, Math.round(Number($("prepMin").value) || 0)),
+    DIRECTIONS: parseCsv($("dirs").value),
+    DIRECT_LINES: parseCsv($("dlines").value),
+    LAT: S.lat,
+    LON: S.lon,
+    SLEEP_ENABLED: $("sleepOn").checked,
+    SLEEP_START: $("sleepStart").value || "10:00",
+    SLEEP_END: $("sleepEnd").value || "06:00",
+    ACTIVE_DAYS: S.days,
+    MANUAL_WAKE_MIN: Math.max(5, Math.round(Number($("wakeMin").value) || 30)),
+    ROTATION: Number($("rot").value) || 0,
+    EPD_VERSION: $("epdVer").value || "V4B",
+    REFRESH_MIN: Number($("refMin").value) || 3
+  };
+  try{
+    const d = await api("/api/save", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify(payload)
+    });
+    if (d.ok){
+      showMsg("saveMsg", "ok", T("saved"));
+    }else{
+      showMsg("saveMsg", "err", d.error || T("errPref"));
+      $("btnSave").disabled = false;
+    }
+  }catch(e){
+    showMsg("saveMsg", "ok", T("sent"));
+  }
+};
+
+$("btnCancel").onclick = async () => {
+  try{ await api("/api/cancel", {method:"POST"}); }catch(e){}
+  showMsg("saveMsg", "info", T("closing"));
+};
+
+$("btnReset").onclick = async () => {
+  if (!confirm(T("confirmReset"))) return;
+  try{ await api("/api/reset", {method:"POST"}); }catch(e){}
+  showMsg("saveMsg", "info", T("resetting"));
+};
+
+loadState();
+</script>
+</body>
+</html>
