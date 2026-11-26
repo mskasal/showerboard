@@ -48,10 +48,12 @@ class TransformTest(unittest.TestCase):
 class RenderTest(unittest.TestCase):
     def test_render_smoke(self):
         s = display.Screen()
+        last_buf = s.last
         s.render_message(None, "Veri yok", "detay")
         s.render_sleep(None)
         self.assertTrue(s.show())
         self.assertFalse(s.show())     # değişiklik yoksa yenileme yok
+        self.assertIs(s.last, last_buf)  # yerinde kopya: her yenilemede yeni 4 KB ayrılmaz
 
     def test_qr_and_multilang_and_long_line_badge(self):
         import qr

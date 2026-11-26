@@ -154,7 +154,8 @@ class Screen:
         self.buf = bytearray(W * BUF_H // 8)
         self.fb = framebuf.FrameBuffer(self.buf, W, BUF_H, framebuf.MONO_VLSB)
         self.out = bytearray(len(self.buf))
-        self.last = None
+        self.last = bytearray(len(self.buf))
+        self.has_last = False
         self.partials = 0
         self.need_full = True
         self.fail_streak = 0      # art arda başarısız güncelleme sayısı
@@ -349,8 +350,7 @@ class Screen:
         # sonra uzun RST (hard_reset) ile tam yenilemeyi tekrar dener; ikisi de
         # olmazsa bu güncellemeyi atlar ve fail_streak'i artırır.
         self._transform()
-        cur = bytes(self.out)
-        if not full and not self.need_full and self.last == cur:
+        if not full and not self.need_full and self.has_last and self.last == self.out:
             return False
         try:
             if full or self.need_full or self.partials >= self.full_every:
@@ -368,10 +368,11 @@ class Screen:
             if not self._recover():
                 self.fail_streak += 1
                 self.need_full = True
-                self.last = None
+                self.has_last = False
                 return False
         self.fail_streak = 0
-        self.last = cur
+        self.last[:] = self.out
+        self.has_last = True
         return True
 
     def _recover(self):
