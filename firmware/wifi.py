@@ -363,7 +363,7 @@ def http_get(url, timeout_s=6, total_s=20, max_bytes=30000):
                 s = ctx.wrap_socket(s, server_hostname=host)
             feed()
         req = (
-            "GET %s HTTP/1.0\r\nHost: %s\r\nUser-Agent: showerboard-pico/1.0\r\n"
+            "GET %s HTTP/1.0\r\nHost: %s\r\nUser-Agent: showerboard-pico/1.0.1\r\n"
             "Accept: application/json\r\nConnection: close\r\n\r\n" % (path, host)
         ).encode()
         if hasattr(s, "write"):
