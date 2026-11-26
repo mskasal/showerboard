@@ -283,6 +283,48 @@ def _expected_size(head):
     return None
 
 
+def _parse_response_chunks(chunks):
+    # Başlığı tüm yanıtı birleştirmeden ayırır; büyük yanıtların RAM'de
+    # iki kez (ham yanıt + gövde) kopyalanmasını önler.
+    head = bytearray()
+    end = -1
+    idx = 0
+    n = len(chunks)
+    while idx < n:
+        c = chunks[idx]
+        chunks[idx] = None
+        idx += 1
+        head.extend(c)
+        end = head.find(b"\r\n\r\n")
+        if end >= 0:
+            break
+    if end < 0:
+        raise OSError("bozuk HTTP yanıtı")
+    nl = head.find(b"\r\n")
+    status_line = bytes(head[:nl]) if nl >= 0 else bytes(head[:end])
+    sparts = status_line.split(b" ")
+    if len(sparts) < 2:
+        raise OSError("bozuk HTTP durum satırı")
+    try:
+        status = int(sparts[1])
+    except ValueError:
+        raise OSError("bozuk HTTP durum kodu")
+    rest = bytes(head[end + 4:])
+    del head
+    body_chunks = [rest] if rest else []
+    while idx < n:
+        c = chunks[idx]
+        chunks[idx] = None
+        idx += 1
+        if c:
+            body_chunks.append(c)
+    del chunks
+    body = b"".join(body_chunks)
+    del body_chunks
+    gc.collect()
+    return status, body
+
+
 def http_get(url, timeout_s=6, total_s=20, max_bytes=30000):
     # HTTPS/HTTP GET, (durum_kodu, gövde_bytes) döner.
     # Her soket işleminde zaman aşımı, toplamda da üst sınır var;
@@ -302,15 +344,18 @@ def http_get(url, timeout_s=6, total_s=20, max_bytes=30000):
     t0 = time.ticks_ms() if hasattr(time, "ticks_ms") else int(time.monotonic() * 1000)
     diff = time.ticks_diff if hasattr(time, "ticks_diff") else (lambda a, b: a - b)
     now_ms = time.ticks_ms if hasattr(time, "ticks_ms") else (lambda: int(time.monotonic() * 1000))
+    gc.collect()
     feed()
     addr = socket.getaddrinfo(host, port, 0, socket.SOCK_STREAM)[0][-1]
     feed()
     s = socket.socket()
+    chunks = []
     try:
         s.settimeout(timeout_s)
         s.connect(addr)
         feed()
         if tls:
+            gc.collect()
             if hasattr(ssl, "wrap_socket"):
                 s = ssl.wrap_socket(s, server_hostname=host)
             else:
@@ -318,14 +363,13 @@ def http_get(url, timeout_s=6, total_s=20, max_bytes=30000):
                 s = ctx.wrap_socket(s, server_hostname=host)
             feed()
         req = (
-            "GET %s HTTP/1.0\r\nHost: %s\r\nUser-Agent: showerboard-pico/1.0\r\n"
+            "GET %s HTTP/1.0\r\nHost: %s\r\nUser-Agent: showerboard-pico/1.0.1\r\n"
             "Accept: application/json\r\nConnection: close\r\n\r\n" % (path, host)
         ).encode()
         if hasattr(s, "write"):
             s.write(req)
         else:
             s.sendall(req)
-        chunks = []
         size = 0
         want = None   # başlık + Content-Length; biliniyorsa erken bitir
         while want is None or size < want:
@@ -342,22 +386,8 @@ def http_get(url, timeout_s=6, total_s=20, max_bytes=30000):
             if want is None and len(chunks) <= 4:
                 want = _expected_size(b"".join(chunks))
     finally:
-        s.close()
-    data = b"".join(chunks)
-    del chunks
-    gc.collect()
-    end = data.find(b"\r\n\r\n")
-    if end < 0:
-        raise OSError("bozuk HTTP yanıtı")
-    status_line = data[:data.find(b"\r\n")]
-    sparts = status_line.split(b" ")
-    if len(sparts) < 2:
-        raise OSError("bozuk HTTP durum satırı")
-    try:
-        status = int(sparts[1])
-    except ValueError:
-        raise OSError("bozuk HTTP durum kodu")
-    body = data[end + 4:]
-    del data
-    gc.collect()
-    return status, body
+        if s is not None:
+            s.close()
+        s = None
+        gc.collect()
+    return _parse_response_chunks(chunks)

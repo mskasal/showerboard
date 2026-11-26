@@ -49,6 +49,7 @@ WDT_MS = 8000              # rp2 en fazla ~8.3 sn
 BATTERY_EVERY_S = 300
 WAKE_LEAD_S = 90           # aktif saatten bu kadar önce uyan (NTP + ilk veri)
 MAX_DISPLAY_RESETS = 3     # ekran yanıt vermezse art arda en fazla bu kadar Pico reseti
+MAX_OOM_STREAK = 3         # art arda bu kadar bellek hatasında temiz reset (7/24 kurtarma)
 CHECKS = ("ekran", "pil", "wifi", "saat", "bvg", "hava")
 
 # Kart üstü LED: (yanık ms, periyot ms). LED Wi-Fi çipine bağlı, kısılamaz;
@@ -58,6 +59,13 @@ LED_PATTERNS = {
     "nowifi": (150, 3000),   # çalışıyor ama Wi-Fi'ya bağlanamıyor
     "error": (250, 500),     # ekran yanıt vermiyor / hata: sürekli yanıp sönme
 }
+
+
+def _is_oom(e):
+    # MicroPython: MemoryError veya mbedTLS OSError(12) [ENOMEM]
+    if isinstance(e, MemoryError):
+        return True
+    return isinstance(e, OSError) and bool(e.args) and e.args[0] == 12
 
 
 def log(*args):
@@ -181,6 +189,7 @@ class App:
         self.batt = None
         self.batt_time = None
         self.stop_error = None
+        self.oom_streak = 0
         self.state = load_state()
         self.ntp_time = (self.state or {}).get("ntp_time")
         self.stop_verified = (
@@ -404,6 +413,7 @@ class App:
             self.data_time = timeutil.now()
             self.fetch_ok = True
             self.transit_detail = None
+            self.oom_streak = 0
             self.check["bvg"] = True
             log("kalkış: %d adet, rt=%s" % (len(deps), rt))
             for d in deps:
@@ -412,6 +422,14 @@ class App:
             self.check["bvg"] = False
             event("kalkış verisi alınamadı:", repr(e))
             self.set_transit_fail(self._t("nodata_detail"))
+            if _is_oom(e):
+                self.oom_streak += 1
+                if self.oom_streak >= MAX_OOM_STREAK:
+                    event("bellek sıkıştı; yeniden başlatılıyor")
+                    wifi.off()
+                    machine.reset()
+            else:
+                self.oom_streak = 0
         gc.collect()
 
     def fetch_weather(self):
